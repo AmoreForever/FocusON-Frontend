@@ -3,15 +3,13 @@ import axios from 'axios'
 import { Link } from 'react-router-dom'
 import './home.css'
 
-export let global_data
-
 const Home = () => {
 	const [data, setData] = useState(null)
 	const [error, setError] = useState(null)
-	const [activeExamId, setActiveExamId] = useState(null) // State to track the active exam
+	const [activeExamId, setActiveExamId] = useState(false) // State to track the active exam
+	const [card, setCard] = useState('')
 
 	useEffect(() => {
-		global_data = data
 		const getStudentDashboard = async () => {
 			const token = localStorage.getItem('token') // Replace 'yourTokenKey' with the key you used to store the token
 			if (!token) {
@@ -71,16 +69,60 @@ const Home = () => {
 		alert('Tokens have been removed')
 	}
 
-	const openStats = () => {
-		setActiveExamId(!activeExamId)
+	const openStats = e => {
+		setActiveExamId(true)
+		let obj = data.find(elem => elem.exam_id == e.target.id)
+		console.log(obj)
+		if (!activeExamId) {
+			let card = document.querySelector('.stats')
+			card.classList.add('active')
+			console.log(card)
+		} else {
+			card.classList.remove('active')
+		}
+		setCard(
+			<div className='card__content'>
+				<h3 className='card__title'>{obj.exam_name}</h3>
+				<div className='card__info'>
+					<p className='card__name'>
+						Name: <strong>{obj.student_name}</strong>
+					</p>
+					<p className='card__duration'>
+						Exam Duration: <strong>{obj.exam_duration} mins</strong>
+					</p>
+					<p className='card__duration'>
+						Exam Date:{' '}
+						<strong>
+							{obj.exam_startdate.substr(0, 10)} {obj.exam_startdate.substr(11)}
+						</strong>
+					</p>
+				</div>
+				<p className='card__mark'>
+					Score:{' '}
+					<strong>
+						{obj.student_mark} | {obj.full_mark}
+					</strong>
+				</p>
+			</div>
+		)
 	}
-	console.log(data)
+
+	const closeStats = () => {
+		setActiveExamId(false)
+		let card = document.querySelector('.stats')
+		card.classList.remove('active')
+	}
 
 	return (
 		<div>
-			<Link to='/' onClick={handleLogout} className='logout'>
-				Log Out
-			</Link>
+			<div className='btns'>
+				<Link to='/' onClick={handleLogout} className='logout'>
+					Log Out
+				</Link>
+				<Link to='/exam' className='logout'>
+					Join Exam
+				</Link>
+			</div>
 			<div className='dashboard'>
 				<h1 className='dashboard__title'>Exams</h1>
 				<div className='dashboard__cards'>
@@ -89,7 +131,8 @@ const Home = () => {
 							<div key={elem.exam_id}>
 								<div
 									className='dashboard__card'
-									onClick={() => openStats()}
+									id={elem.exam_id}
+									onClick={e => openStats(e)}
 								>
 									<img
 										className='exam__img'
@@ -102,7 +145,17 @@ const Home = () => {
 						)
 					})}
 				</div>
-				
+				<div className='stats'>
+					{card}
+					<button
+						className='close__btn'
+						onClick={() => {
+							closeStats()
+						}}
+					>
+						Close
+					</button>
+				</div>
 			</div>
 		</div>
 	)
